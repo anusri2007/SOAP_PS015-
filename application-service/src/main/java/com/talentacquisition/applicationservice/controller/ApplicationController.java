@@ -75,6 +75,23 @@ public class ApplicationController {
         return ResponseEntity.ok(list);
     }
 
+    @PutMapping("/{id}/status")
+    public ResponseEntity<ApplicationResponse> updateApplicationStatus(
+            @PathVariable("id") Long id,
+            @jakarta.validation.Valid @RequestBody com.talentacquisition.applicationservice.dto.ApplicationStatusUpdateRequest request,
+            @RequestHeader(value = "X-User-Id", required = false) Long userHeaderId,
+            @RequestHeader(value = "X-Candidate-Id", required = false) Long candidateHeaderId,
+            @RequestHeader(value = "X-User-Roles", required = false) String rolesHeader,
+            Authentication authentication) {
+
+        Long callerId = userHeaderId != null ? userHeaderId : extractCandidateId(authentication, candidateHeaderId);
+        java.util.List<String> roles = extractRoles(authentication, rolesHeader);
+
+        log.info("Updating application id={} status to {} by callerId={}, roles={}", id, request.getStatus(), callerId, roles);
+        ApplicationResponse response = applicationService.updateApplicationStatus(id, request.getStatus(), callerId, roles);
+        return ResponseEntity.ok(response);
+    }
+
     private Long extractCandidateId(Authentication authentication, Long candidateHeaderId) {
         if (candidateHeaderId != null) {
             return candidateHeaderId;

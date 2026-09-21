@@ -193,6 +193,20 @@ public class ApplicationServiceImpl implements ApplicationService {
 
     @Override
     @Transactional
+    public ApplicationResponse updateApplicationStatus(Long id, ApplicationStatus newStatus, Long callerId, List<String> roles) {
+        boolean isHrOrAdmin = roles != null && roles.stream().anyMatch(r ->
+                r.equalsIgnoreCase("HR") || r.equalsIgnoreCase("ADMIN") ||
+                r.equalsIgnoreCase("ROLE_HR") || r.equalsIgnoreCase("ROLE_ADMIN"));
+
+        if (!isHrOrAdmin) {
+            throw new ForbiddenException("Access denied: Only HR or Admin users can update application status");
+        }
+
+        return updateApplicationStatus(id, newStatus);
+    }
+
+    @Override
+    @Transactional
     public ApplicationResponse shortlistCandidate(Long id) {
         return updateApplicationStatus(id, ApplicationStatus.SHORTLISTED);
     }

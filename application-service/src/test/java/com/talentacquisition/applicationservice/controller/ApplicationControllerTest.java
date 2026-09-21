@@ -146,5 +146,49 @@ class ApplicationControllerTest {
                 .andExpect(jsonPath("$[0].jobId").value(501L))
                 .andExpect(jsonPath("$[0].status").value("APPLIED"));
     }
+
+    @Test
+    void testUpdateApplicationStatus_Success() throws Exception {
+        com.talentacquisition.applicationservice.dto.ApplicationStatusUpdateRequest request =
+                com.talentacquisition.applicationservice.dto.ApplicationStatusUpdateRequest.builder()
+                        .status(ApplicationStatus.SHORTLISTED)
+                        .remarks("Looks promising")
+                        .build();
+
+        ApplicationResponse mockResponse = ApplicationResponse.builder()
+                .id(1L)
+                .candidateId(101L)
+                .jobId(501L)
+                .applicationDate(LocalDateTime.now())
+                .status(ApplicationStatus.SHORTLISTED)
+                .build();
+
+        when(applicationService.updateApplicationStatus(eq(1L), eq(ApplicationStatus.SHORTLISTED), any(), any()))
+                .thenReturn(mockResponse);
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put("/api/applications/1/status")
+                        .header("X-User-Id", 501L)
+                        .header("X-User-Roles", "ROLE_HR")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1L))
+                .andExpect(jsonPath("$.status").value("SHORTLISTED"));
+    }
+
+    @Test
+    void testUpdateApplicationStatus_ValidationError_NullStatus() throws Exception {
+        com.talentacquisition.applicationservice.dto.ApplicationStatusUpdateRequest request =
+                com.talentacquisition.applicationservice.dto.ApplicationStatusUpdateRequest.builder()
+                        .status(null)
+                        .build();
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put("/api/applications/1/status")
+                        .header("X-User-Id", 501L)
+                        .header("X-User-Roles", "ROLE_HR")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+    }
 }
 

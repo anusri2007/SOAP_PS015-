@@ -22,6 +22,8 @@ public interface ApplicationService {
 
     ApplicationResponse updateApplicationStatus(Long id, ApplicationStatus newStatus);
 
+    ApplicationResponse updateApplicationStatus(Long id, ApplicationStatus newStatus, Long callerId, List<String> roles);
+
     ApplicationResponse shortlistCandidate(Long id);
 
     ApplicationResponse rejectCandidate(Long id);

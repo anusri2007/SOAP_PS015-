@@ -325,6 +325,26 @@ class ApplicationServiceTest {
     }
 
     @Test
+    void testUpdateApplicationStatus_HRAuthorized() {
+        when(applicationRepository.findById(1L)).thenReturn(Optional.of(sampleApp));
+        when(applicationRepository.save(any(Application.class))).thenReturn(sampleApp);
+
+        ApplicationResponse response = applicationService.updateApplicationStatus(
+                1L, ApplicationStatus.SHORTLISTED, 501L, List.of("ROLE_HR"));
+
+        assertThat(response).isNotNull();
+        assertThat(sampleApp.getStatus()).isEqualTo(ApplicationStatus.SHORTLISTED);
+    }
+
+    @Test
+    void testUpdateApplicationStatus_CandidateForbidden() {
+        assertThrows(com.talentacquisition.applicationservice.exception.ForbiddenException.class, () -> {
+            applicationService.updateApplicationStatus(
+                    1L, ApplicationStatus.SHORTLISTED, 101L, List.of("ROLE_CANDIDATE"));
+        });
+    }
+
+    @Test
     void testShortlistCandidate() {
         when(applicationRepository.findById(1L)).thenReturn(Optional.of(sampleApp));
         when(applicationRepository.save(any(Application.class))).thenReturn(sampleApp);
