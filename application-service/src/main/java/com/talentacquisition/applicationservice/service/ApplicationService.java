@@ -26,6 +26,8 @@ public interface ApplicationService {
 
     ApplicationResponse shortlistCandidate(Long id);
 
+    ApplicationResponse shortlistCandidate(Long id, Long callerId, List<String> roles);
+
     ApplicationResponse rejectCandidate(Long id);
 
     ApplicationResponse selectCandidate(Long id);

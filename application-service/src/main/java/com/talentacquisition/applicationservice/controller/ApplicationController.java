@@ -92,6 +92,22 @@ public class ApplicationController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/{id}/shortlist")
+    public ResponseEntity<ApplicationResponse> shortlistCandidate(
+            @PathVariable("id") Long id,
+            @RequestHeader(value = "X-User-Id", required = false) Long userHeaderId,
+            @RequestHeader(value = "X-Candidate-Id", required = false) Long candidateHeaderId,
+            @RequestHeader(value = "X-User-Roles", required = false) String rolesHeader,
+            Authentication authentication) {
+
+        Long callerId = userHeaderId != null ? userHeaderId : extractCandidateId(authentication, candidateHeaderId);
+        java.util.List<String> roles = extractRoles(authentication, rolesHeader);
+
+        log.info("Shortlisting application id={} by callerId={}, roles={}", id, callerId, roles);
+        ApplicationResponse response = applicationService.shortlistCandidate(id, callerId, roles);
+        return ResponseEntity.ok(response);
+    }
+
     private Long extractCandidateId(Authentication authentication, Long candidateHeaderId) {
         if (candidateHeaderId != null) {
             return candidateHeaderId;
