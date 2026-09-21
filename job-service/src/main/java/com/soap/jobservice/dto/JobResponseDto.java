@@ -1,66 +1,37 @@
-package com.soap.jobservice.entity;
+package com.soap.jobservice.dto;
 
-import jakarta.persistence.*;
+import com.soap.jobservice.entity.EmploymentType;
+import com.soap.jobservice.entity.Job;
+import com.soap.jobservice.entity.JobStatus;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "jobs")
-public class Job {
+public class JobResponseDto {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @Column(nullable = false, length = 200)
     private String title;
-
-    @Column(nullable = false, columnDefinition = "TEXT")
     private String description;
-
-    @Column(nullable = false, length = 150)
     private String company;
-
-    @Column(nullable = false, length = 150)
     private String location;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 50)
     private EmploymentType employmentType;
-
-    @Column(nullable = false, length = 100)
     private String experienceRequired;
-
-    @Column(nullable = false)
     private Double salary;
-
-    @Column(nullable = false, columnDefinition = "TEXT")
     private String skills;
-
-    @Column(nullable = false)
     private LocalDate postedDate;
-
     private LocalDate closingDate;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
     private JobStatus status;
-
-    @Column(nullable = false)
     private Long hrId;
-
     private LocalDateTime createdAt;
-
     private LocalDateTime updatedAt;
 
-    public Job() {
+    public JobResponseDto() {
     }
 
-    public Job(Long id, String title, String description, String company, String location,
-               EmploymentType employmentType, String experienceRequired, Double salary,
-               String skills, LocalDate postedDate, LocalDate closingDate, JobStatus status,
-               Long hrId, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public JobResponseDto(Long id, String title, String description, String company, String location,
+                          EmploymentType employmentType, String experienceRequired, Double salary,
+                          String skills, LocalDate postedDate, LocalDate closingDate, JobStatus status,
+                          Long hrId, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.title = title;
         this.description = description;
@@ -78,24 +49,29 @@ public class Job {
         this.updatedAt = updatedAt;
     }
 
-    @PrePersist
-    protected void onCreate() {
-        if (postedDate == null) {
-            postedDate = LocalDate.now();
+    public static JobResponseDto fromEntity(Job job) {
+        if (job == null) {
+            return null;
         }
-        if (status == null) {
-            status = JobStatus.OPEN;
-        }
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
+        return JobResponseDto.builder()
+                .id(job.getId())
+                .title(job.getTitle())
+                .description(job.getDescription())
+                .company(job.getCompany())
+                .location(job.getLocation())
+                .employmentType(job.getEmploymentType())
+                .experienceRequired(job.getExperienceRequired())
+                .salary(job.getSalary())
+                .skills(job.getSkills())
+                .postedDate(job.getPostedDate())
+                .closingDate(job.getClosingDate())
+                .status(job.getStatus())
+                .hrId(job.getHrId())
+                .createdAt(job.getCreatedAt())
+                .updatedAt(job.getUpdatedAt())
+                .build();
     }
 
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
-
-    // Getters and Setters
     public Long getId() {
         return id;
     }
@@ -216,12 +192,11 @@ public class Job {
         this.updatedAt = updatedAt;
     }
 
-    // Builder Pattern
-    public static JobBuilder builder() {
-        return new JobBuilder();
+    public static JobResponseDtoBuilder builder() {
+        return new JobResponseDtoBuilder();
     }
 
-    public static class JobBuilder {
+    public static class JobResponseDtoBuilder {
         private Long id;
         private String title;
         private String description;
@@ -238,88 +213,85 @@ public class Job {
         private LocalDateTime createdAt;
         private LocalDateTime updatedAt;
 
-        JobBuilder() {
-        }
-
-        public JobBuilder id(Long id) {
+        public JobResponseDtoBuilder id(Long id) {
             this.id = id;
             return this;
         }
 
-        public JobBuilder title(String title) {
+        public JobResponseDtoBuilder title(String title) {
             this.title = title;
             return this;
         }
 
-        public JobBuilder description(String description) {
+        public JobResponseDtoBuilder description(String description) {
             this.description = description;
             return this;
         }
 
-        public JobBuilder company(String company) {
+        public JobResponseDtoBuilder company(String company) {
             this.company = company;
             return this;
         }
 
-        public JobBuilder location(String location) {
+        public JobResponseDtoBuilder location(String location) {
             this.location = location;
             return this;
         }
 
-        public JobBuilder employmentType(EmploymentType employmentType) {
+        public JobResponseDtoBuilder employmentType(EmploymentType employmentType) {
             this.employmentType = employmentType;
             return this;
         }
 
-        public JobBuilder experienceRequired(String experienceRequired) {
+        public JobResponseDtoBuilder experienceRequired(String experienceRequired) {
             this.experienceRequired = experienceRequired;
             return this;
         }
 
-        public JobBuilder salary(Double salary) {
+        public JobResponseDtoBuilder salary(Double salary) {
             this.salary = salary;
             return this;
         }
 
-        public JobBuilder skills(String skills) {
+        public JobResponseDtoBuilder skills(String skills) {
             this.skills = skills;
             return this;
         }
 
-        public JobBuilder postedDate(LocalDate postedDate) {
+        public JobResponseDtoBuilder postedDate(LocalDate postedDate) {
             this.postedDate = postedDate;
             return this;
         }
 
-        public JobBuilder closingDate(LocalDate closingDate) {
+        public JobResponseDtoBuilder closingDate(LocalDate closingDate) {
             this.closingDate = closingDate;
             return this;
         }
 
-        public JobBuilder status(JobStatus status) {
+        public JobResponseDtoBuilder status(JobStatus status) {
             this.status = status;
             return this;
         }
 
-        public JobBuilder hrId(Long hrId) {
+        public JobResponseDtoBuilder hrId(Long hrId) {
             this.hrId = hrId;
             return this;
         }
 
-        public JobBuilder createdAt(LocalDateTime createdAt) {
+        public JobResponseDtoBuilder createdAt(LocalDateTime createdAt) {
             this.createdAt = createdAt;
             return this;
         }
 
-        public JobBuilder updatedAt(LocalDateTime updatedAt) {
+        public JobResponseDtoBuilder updatedAt(LocalDateTime updatedAt) {
             this.updatedAt = updatedAt;
             return this;
         }
 
-        public Job build() {
-            return new Job(id, title, description, company, location, employmentType,
-                    experienceRequired, salary, skills, postedDate, closingDate, status,
-                    hrId, createdAt, updatedAt);
+        public JobResponseDto build() {
+            return new JobResponseDto(id, title, description, company, location,
+                    employmentType, experienceRequired, salary, skills,
+                    postedDate, closingDate, status, hrId, createdAt, updatedAt);
         }
     }
 }
