@@ -412,5 +412,23 @@ class ApplicationServiceTest {
         assertThat(response).isNotNull();
         assertThat(sampleApp.getStatus()).isEqualTo(ApplicationStatus.SELECTED);
     }
+
+    @Test
+    void testSelectCandidate_AuthorizedHR() {
+        when(applicationRepository.findById(1L)).thenReturn(Optional.of(sampleApp));
+        when(applicationRepository.save(any(Application.class))).thenReturn(sampleApp);
+
+        ApplicationResponse response = applicationService.selectCandidate(1L, 501L, List.of("ROLE_HR"));
+
+        assertThat(response).isNotNull();
+        assertThat(sampleApp.getStatus()).isEqualTo(ApplicationStatus.SELECTED);
+    }
+
+    @Test
+    void testSelectCandidate_CandidateForbidden() {
+        assertThrows(com.talentacquisition.applicationservice.exception.ForbiddenException.class, () -> {
+            applicationService.selectCandidate(1L, 101L, List.of("ROLE_CANDIDATE"));
+        });
+    }
 }
 

@@ -235,6 +235,12 @@ public class ApplicationServiceImpl implements ApplicationService {
         return updateApplicationStatus(id, ApplicationStatus.SELECTED);
     }
 
+    @Override
+    @Transactional
+    public ApplicationResponse selectCandidate(Long id, Long callerId, List<String> roles) {
+        return updateApplicationStatus(id, ApplicationStatus.SELECTED, callerId, roles);
+    }
+
     private ApplicationResponse mapToResponse(Application application) {
         return ApplicationResponse.builder()
                 .id(application.getId())

@@ -33,5 +33,7 @@ public interface ApplicationService {
     ApplicationResponse rejectCandidate(Long id, Long callerId, List<String> roles);
 
     ApplicationResponse selectCandidate(Long id);
+
+    ApplicationResponse selectCandidate(Long id, Long callerId, List<String> roles);
 }
 
