@@ -138,7 +138,41 @@ public class ApplicationServiceImpl implements ApplicationService {
     public List<ApplicationResponse> getApplicationsByJobId(Long jobId) {
         return applicationRepository.findByJobId(jobId).stream()
                 .map(this::mapToResponse)
+                .peek(this::enrichWithJobTitle)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ApplicationResponse> getApplicationsByJobId(Long jobId, Long callerId, List<String> roles) {
+        boolean isAdmin = roles != null && roles.stream().anyMatch(r ->
+                r.equalsIgnoreCase("ADMIN") || r.equalsIgnoreCase("ROLE_ADMIN"));
+        boolean isHr = roles != null && roles.stream().anyMatch(r ->
+                r.equalsIgnoreCase("HR") || r.equalsIgnoreCase("ROLE_HR"));
+
+        if (!isAdmin && !isHr) {
+            throw new ForbiddenException("Access denied: Only HR or Admin users can view job applications");
+        }
+
+        if (!isAdmin && isHr && callerId != null && jobServiceClient != null) {
+            try {
+                com.talentacquisition.applicationservice.client.JobResponseDto job =
+                        jobServiceClient.getJobById(jobId);
+                if (job == null) {
+                    throw new com.talentacquisition.applicationservice.exception.JobNotFoundException("Job not found with id: " + jobId);
+                }
+                if (job.getHrId() != null && !job.getHrId().equals(callerId)) {
+                    throw new ForbiddenException("HR user is not authorized to view applications for another HR's job");
+                }
+            } catch (feign.FeignException.NotFound e) {
+                throw new com.talentacquisition.applicationservice.exception.JobNotFoundException("Job not found with id: " + jobId);
+            } catch (feign.FeignException e) {
+                log.error("Error communicating with Job Service", e);
+                throw new com.talentacquisition.applicationservice.exception.ServiceCommunicationException("Job Service communication error: " + e.getMessage());
+            }
+        }
+
+        return getApplicationsByJobId(jobId);
     }
 
     @Override

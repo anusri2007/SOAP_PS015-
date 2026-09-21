@@ -18,6 +18,8 @@ public interface ApplicationService {
 
     List<ApplicationResponse> getApplicationsByJobId(Long jobId);
 
+    List<ApplicationResponse> getApplicationsByJobId(Long jobId, Long callerId, List<String> roles);
+
     ApplicationResponse updateApplicationStatus(Long id, ApplicationStatus newStatus);
 
     ApplicationResponse shortlistCandidate(Long id);

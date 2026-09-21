@@ -255,6 +255,57 @@ class ApplicationServiceTest {
     }
 
     @Test
+    void testGetApplicationsByJobId_AuthorizedHROwner() {
+        com.talentacquisition.applicationservice.client.JobResponseDto job =
+                com.talentacquisition.applicationservice.client.JobResponseDto.builder()
+                        .id(201L)
+                        .title("Software Engineer")
+                        .hrId(501L)
+                        .build();
+
+        when(jobServiceClient.getJobById(201L)).thenReturn(job);
+        when(applicationRepository.findByJobId(201L)).thenReturn(List.of(sampleApp));
+
+        List<ApplicationResponse> list = applicationService.getApplicationsByJobId(201L, 501L, List.of("ROLE_HR"));
+
+        assertThat(list).hasSize(1);
+        assertThat(list.get(0).getJobId()).isEqualTo(201L);
+    }
+
+    @Test
+    void testGetApplicationsByJobId_UnauthorizedHROther() {
+        com.talentacquisition.applicationservice.client.JobResponseDto job =
+                com.talentacquisition.applicationservice.client.JobResponseDto.builder()
+                        .id(201L)
+                        .title("Software Engineer")
+                        .hrId(501L)
+                        .build();
+
+        when(jobServiceClient.getJobById(201L)).thenReturn(job);
+
+        assertThrows(com.talentacquisition.applicationservice.exception.ForbiddenException.class, () -> {
+            applicationService.getApplicationsByJobId(201L, 999L, List.of("ROLE_HR"));
+        });
+    }
+
+    @Test
+    void testGetApplicationsByJobId_CandidateForbidden() {
+        assertThrows(com.talentacquisition.applicationservice.exception.ForbiddenException.class, () -> {
+            applicationService.getApplicationsByJobId(201L, 101L, List.of("ROLE_CANDIDATE"));
+        });
+    }
+
+    @Test
+    void testGetApplicationsByJobId_AdminAuthorized() {
+        when(applicationRepository.findByJobId(201L)).thenReturn(List.of(sampleApp));
+
+        List<ApplicationResponse> list = applicationService.getApplicationsByJobId(201L, 999L, List.of("ROLE_ADMIN"));
+
+        assertThat(list).hasSize(1);
+        assertThat(list.get(0).getJobId()).isEqualTo(201L);
+    }
+
+    @Test
     void testUpdateApplicationStatus_Success() {
         when(applicationRepository.findById(1L)).thenReturn(Optional.of(sampleApp));
         when(applicationRepository.save(any(Application.class))).thenReturn(sampleApp);

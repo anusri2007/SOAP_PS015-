@@ -123,5 +123,28 @@ class ApplicationControllerTest {
                 .andExpect(jsonPath("$.jobId").value(501L))
                 .andExpect(jsonPath("$.jobTitle").value("Backend Engineer"));
     }
+
+    @Test
+    void testGetApplicationsForJob() throws Exception {
+        ApplicationResponse mockResponse = ApplicationResponse.builder()
+                .id(1L)
+                .candidateId(101L)
+                .jobId(501L)
+                .applicationDate(LocalDateTime.now())
+                .status(ApplicationStatus.APPLIED)
+                .jobTitle("Backend Engineer")
+                .build();
+
+        when(applicationService.getApplicationsByJobId(eq(501L), any(), any()))
+                .thenReturn(java.util.List.of(mockResponse));
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/applications/job/501")
+                        .header("X-User-Id", 501L)
+                        .header("X-User-Roles", "ROLE_HR"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(1L))
+                .andExpect(jsonPath("$[0].jobId").value(501L))
+                .andExpect(jsonPath("$[0].status").value("APPLIED"));
+    }
 }
 

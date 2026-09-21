@@ -59,6 +59,22 @@ public class ApplicationController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/job/{jobId}")
+    public ResponseEntity<java.util.List<ApplicationResponse>> getApplicationsForJob(
+            @PathVariable("jobId") Long jobId,
+            @RequestHeader(value = "X-User-Id", required = false) Long userHeaderId,
+            @RequestHeader(value = "X-Candidate-Id", required = false) Long candidateHeaderId,
+            @RequestHeader(value = "X-User-Roles", required = false) String rolesHeader,
+            Authentication authentication) {
+
+        Long callerId = userHeaderId != null ? userHeaderId : extractCandidateId(authentication, candidateHeaderId);
+        java.util.List<String> roles = extractRoles(authentication, rolesHeader);
+
+        log.info("Fetching applications for jobId={} by callerId={}, roles={}", jobId, callerId, roles);
+        java.util.List<ApplicationResponse> list = applicationService.getApplicationsByJobId(jobId, callerId, roles);
+        return ResponseEntity.ok(list);
+    }
+
     private Long extractCandidateId(Authentication authentication, Long candidateHeaderId) {
         if (candidateHeaderId != null) {
             return candidateHeaderId;
