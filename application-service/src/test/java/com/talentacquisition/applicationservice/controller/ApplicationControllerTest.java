@@ -23,8 +23,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.talentacquisition.applicationservice.security.*;
+import org.springframework.security.test.context.support.WithMockUser;
+
 @WebMvcTest(ApplicationController.class)
-@Import(SecurityConfig.class)
+@Import({SecurityConfig.class, JwtAuthenticationFilter.class, JwtUtils.class, JwtAuthenticationEntryPoint.class, JwtAccessDeniedHandler.class})
+@WithMockUser(username = "101", roles = {"CANDIDATE", "HR", "ADMIN"})
 class ApplicationControllerTest {
 
     @Autowired

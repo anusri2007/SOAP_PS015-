@@ -144,6 +144,11 @@ public class ApplicationController {
         if (candidateHeaderId != null) {
             return candidateHeaderId;
         }
+        if (authentication != null && authentication.getPrincipal() instanceof com.talentacquisition.applicationservice.security.UserPrincipal principal) {
+            if (principal.getUserId() != null) {
+                return principal.getUserId();
+            }
+        }
         if (authentication != null && authentication.getName() != null) {
             try {
                 return Long.parseLong(authentication.getName());
