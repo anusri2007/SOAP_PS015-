@@ -6,6 +6,7 @@ import com.talentacquisition.applicationservice.entity.Application;
 import com.talentacquisition.applicationservice.entity.ApplicationStatus;
 import com.talentacquisition.applicationservice.exception.ApplicationNotFoundException;
 import com.talentacquisition.applicationservice.exception.DuplicateApplicationException;
+import com.talentacquisition.applicationservice.exception.ForbiddenException;
 import com.talentacquisition.applicationservice.exception.InvalidStatusException;
 import com.talentacquisition.applicationservice.repository.ApplicationRepository;
 import lombok.RequiredArgsConstructor;
@@ -99,7 +100,28 @@ public class ApplicationServiceImpl implements ApplicationService {
     public ApplicationResponse getApplicationById(Long id) {
         Application application = applicationRepository.findById(id)
                 .orElseThrow(() -> new ApplicationNotFoundException("Application not found with id: " + id));
-        return mapToResponse(application);
+        ApplicationResponse response = mapToResponse(application);
+        enrichWithJobTitle(response);
+        return response;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ApplicationResponse getApplicationById(Long id, Long callerId, List<String> roles) {
+        Application application = applicationRepository.findById(id)
+                .orElseThrow(() -> new ApplicationNotFoundException("Application not found with id: " + id));
+
+        boolean isHrOrAdmin = roles != null && roles.stream().anyMatch(r ->
+                r.equalsIgnoreCase("HR") || r.equalsIgnoreCase("ADMIN") ||
+                r.equalsIgnoreCase("ROLE_HR") || r.equalsIgnoreCase("ROLE_ADMIN"));
+
+        if (!isHrOrAdmin && callerId != null && !application.getCandidateId().equals(callerId)) {
+            throw new ForbiddenException("You are not authorized to view this application");
+        }
+
+        ApplicationResponse response = mapToResponse(application);
+        enrichWithJobTitle(response);
+        return response;
     }
 
     @Override
@@ -107,6 +129,7 @@ public class ApplicationServiceImpl implements ApplicationService {
     public List<ApplicationResponse> getApplicationsByCandidateId(Long candidateId) {
         return applicationRepository.findByCandidateId(candidateId).stream()
                 .map(this::mapToResponse)
+                .peek(this::enrichWithJobTitle)
                 .collect(Collectors.toList());
     }
 
@@ -162,6 +185,20 @@ public class ApplicationServiceImpl implements ApplicationService {
                 .createdAt(application.getCreatedAt())
                 .updatedAt(application.getUpdatedAt())
                 .build();
+    }
+
+    private void enrichWithJobTitle(ApplicationResponse response) {
+        if (jobServiceClient != null && response != null && response.getJobId() != null) {
+            try {
+                com.talentacquisition.applicationservice.client.JobResponseDto job =
+                        jobServiceClient.getJobById(response.getJobId());
+                if (job != null && job.getTitle() != null) {
+                    response.setJobTitle(job.getTitle());
+                }
+            } catch (Exception e) {
+                log.debug("Could not fetch job title for jobId={}: {}", response.getJobId(), e.getMessage());
+            }
+        }
     }
 }
 

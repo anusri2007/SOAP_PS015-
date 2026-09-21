@@ -12,6 +12,8 @@ public interface ApplicationService {
 
     ApplicationResponse getApplicationById(Long id);
 
+    ApplicationResponse getApplicationById(Long id, Long callerId, List<String> roles);
+
     List<ApplicationResponse> getApplicationsByCandidateId(Long candidateId);
 
     List<ApplicationResponse> getApplicationsByJobId(Long jobId);

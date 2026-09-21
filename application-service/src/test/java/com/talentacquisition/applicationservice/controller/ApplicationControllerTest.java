@@ -76,5 +76,52 @@ class ApplicationControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
     }
+
+    @Test
+    void testGetMyApplications() throws Exception {
+        ApplicationResponse mockResponse = ApplicationResponse.builder()
+                .id(1L)
+                .candidateId(101L)
+                .jobId(501L)
+                .applicationDate(LocalDateTime.now())
+                .status(ApplicationStatus.APPLIED)
+                .jobTitle("Backend Engineer")
+                .build();
+
+        when(applicationService.getApplicationsByCandidateId(101L))
+                .thenReturn(java.util.List.of(mockResponse));
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/applications/my")
+                        .header("X-Candidate-Id", 101L))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(1L))
+                .andExpect(jsonPath("$[0].candidateId").value(101L))
+                .andExpect(jsonPath("$[0].jobId").value(501L))
+                .andExpect(jsonPath("$[0].jobTitle").value("Backend Engineer"))
+                .andExpect(jsonPath("$[0].status").value("APPLIED"));
+    }
+
+    @Test
+    void testGetApplicationById() throws Exception {
+        ApplicationResponse mockResponse = ApplicationResponse.builder()
+                .id(1L)
+                .candidateId(101L)
+                .jobId(501L)
+                .applicationDate(LocalDateTime.now())
+                .status(ApplicationStatus.APPLIED)
+                .jobTitle("Backend Engineer")
+                .build();
+
+        when(applicationService.getApplicationById(eq(1L), any(), any()))
+                .thenReturn(mockResponse);
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/applications/1")
+                        .header("X-Candidate-Id", 101L))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1L))
+                .andExpect(jsonPath("$.candidateId").value(101L))
+                .andExpect(jsonPath("$.jobId").value(501L))
+                .andExpect(jsonPath("$.jobTitle").value("Backend Engineer"));
+    }
 }
 

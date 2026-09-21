@@ -206,6 +206,35 @@ class ApplicationServiceTest {
     }
 
     @Test
+    void testGetApplicationById_AuthorizedCandidate() {
+        when(applicationRepository.findById(1L)).thenReturn(Optional.of(sampleApp));
+
+        ApplicationResponse response = applicationService.getApplicationById(1L, 101L, List.of("ROLE_CANDIDATE"));
+
+        assertThat(response).isNotNull();
+        assertThat(response.getId()).isEqualTo(1L);
+    }
+
+    @Test
+    void testGetApplicationById_UnauthorizedCandidate() {
+        when(applicationRepository.findById(1L)).thenReturn(Optional.of(sampleApp));
+
+        assertThrows(com.talentacquisition.applicationservice.exception.ForbiddenException.class, () -> {
+            applicationService.getApplicationById(1L, 999L, List.of("ROLE_CANDIDATE"));
+        });
+    }
+
+    @Test
+    void testGetApplicationById_AuthorizedHR() {
+        when(applicationRepository.findById(1L)).thenReturn(Optional.of(sampleApp));
+
+        ApplicationResponse response = applicationService.getApplicationById(1L, 999L, List.of("ROLE_HR"));
+
+        assertThat(response).isNotNull();
+        assertThat(response.getId()).isEqualTo(1L);
+    }
+
+    @Test
     void testGetApplicationsByCandidateId() {
         when(applicationRepository.findByCandidateId(101L)).thenReturn(List.of(sampleApp));
 

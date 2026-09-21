@@ -32,6 +32,33 @@ public class ApplicationController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
+    @GetMapping("/my")
+    public ResponseEntity<java.util.List<ApplicationResponse>> getMyApplications(
+            @RequestHeader(value = "X-Candidate-Id", required = false) Long candidateHeaderId,
+            Authentication authentication) {
+
+        Long candidateId = extractCandidateId(authentication, candidateHeaderId);
+        log.info("Fetching applications for candidateId={}", candidateId);
+        java.util.List<ApplicationResponse> list = applicationService.getApplicationsByCandidateId(candidateId);
+        return ResponseEntity.ok(list);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ApplicationResponse> getApplicationById(
+            @PathVariable("id") Long id,
+            @RequestHeader(value = "X-User-Id", required = false) Long userHeaderId,
+            @RequestHeader(value = "X-Candidate-Id", required = false) Long candidateHeaderId,
+            @RequestHeader(value = "X-User-Roles", required = false) String rolesHeader,
+            Authentication authentication) {
+
+        Long callerId = userHeaderId != null ? userHeaderId : extractCandidateId(authentication, candidateHeaderId);
+        java.util.List<String> roles = extractRoles(authentication, rolesHeader);
+
+        log.info("Fetching application id={} for callerId={}, roles={}", id, callerId, roles);
+        ApplicationResponse response = applicationService.getApplicationById(id, callerId, roles);
+        return ResponseEntity.ok(response);
+    }
+
     private Long extractCandidateId(Authentication authentication, Long candidateHeaderId) {
         if (candidateHeaderId != null) {
             return candidateHeaderId;
@@ -44,6 +71,20 @@ public class ApplicationController {
             }
         }
         return 101L; // default fallback
+    }
+
+    private java.util.List<String> extractRoles(Authentication authentication, String rolesHeader) {
+        if (rolesHeader != null && !rolesHeader.isBlank()) {
+            return java.util.Arrays.stream(rolesHeader.split(","))
+                    .map(String::trim)
+                    .collect(java.util.stream.Collectors.toList());
+        }
+        if (authentication != null && authentication.getAuthorities() != null) {
+            return authentication.getAuthorities().stream()
+                    .map(org.springframework.security.core.GrantedAuthority::getAuthority)
+                    .collect(java.util.stream.Collectors.toList());
+        }
+        return java.util.List.of();
     }
 }
 
