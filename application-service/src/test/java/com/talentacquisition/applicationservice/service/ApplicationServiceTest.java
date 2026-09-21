@@ -33,6 +33,9 @@ class ApplicationServiceTest {
     @Mock
     private com.talentacquisition.applicationservice.client.JobServiceClient jobServiceClient;
 
+    @Mock
+    private com.talentacquisition.applicationservice.client.ProfileServiceClient profileServiceClient;
+
     @InjectMocks
     private ApplicationServiceImpl applicationService;
 
@@ -65,8 +68,15 @@ class ApplicationServiceTest {
                         .title("Software Engineer")
                         .status("OPEN")
                         .build();
+        com.talentacquisition.applicationservice.client.ProfileResponseDto profile =
+                com.talentacquisition.applicationservice.client.ProfileResponseDto.builder()
+                        .id(50L)
+                        .candidateId(101L)
+                        .fullName("John Candidate")
+                        .build();
 
         when(jobServiceClient.getJobById(201L)).thenReturn(job);
+        when(profileServiceClient.getProfileByCandidateId(101L)).thenReturn(profile);
         when(applicationRepository.existsByCandidateIdAndJobId(101L, 201L)).thenReturn(false);
         when(applicationRepository.save(any(Application.class))).thenReturn(sampleApp);
 
@@ -111,7 +121,7 @@ class ApplicationServiceTest {
     }
 
     @Test
-    void testCreateApplication_DuplicateThrowsException() {
+    void testCreateApplication_ProfileNotFound() {
         com.talentacquisition.applicationservice.client.JobResponseDto job =
                 com.talentacquisition.applicationservice.client.JobResponseDto.builder()
                         .id(201L)
@@ -119,6 +129,54 @@ class ApplicationServiceTest {
                         .status("OPEN")
                         .build();
         when(jobServiceClient.getJobById(201L)).thenReturn(job);
+        when(profileServiceClient.getProfileByCandidateId(101L)).thenReturn(null);
+
+        assertThrows(com.talentacquisition.applicationservice.exception.ProfileNotFoundException.class, () -> {
+            applicationService.createApplication(101L, sampleRequest);
+        });
+
+        verify(applicationRepository, never()).save(any(Application.class));
+    }
+
+    @Test
+    void testCreateApplication_ProfileDoesNotBelongToCandidate() {
+        com.talentacquisition.applicationservice.client.JobResponseDto job =
+                com.talentacquisition.applicationservice.client.JobResponseDto.builder()
+                        .id(201L)
+                        .title("Software Engineer")
+                        .status("OPEN")
+                        .build();
+        com.talentacquisition.applicationservice.client.ProfileResponseDto profile =
+                com.talentacquisition.applicationservice.client.ProfileResponseDto.builder()
+                        .id(50L)
+                        .candidateId(999L)
+                        .build();
+
+        when(jobServiceClient.getJobById(201L)).thenReturn(job);
+        when(profileServiceClient.getProfileByCandidateId(101L)).thenReturn(profile);
+
+        assertThrows(com.talentacquisition.applicationservice.exception.ForbiddenException.class, () -> {
+            applicationService.createApplication(101L, sampleRequest);
+        });
+
+        verify(applicationRepository, never()).save(any(Application.class));
+    }
+
+    @Test
+    void testCreateApplication_DuplicateThrowsException() {
+        com.talentacquisition.applicationservice.client.JobResponseDto job =
+                com.talentacquisition.applicationservice.client.JobResponseDto.builder()
+                        .id(201L)
+                        .title("Software Engineer")
+                        .status("OPEN")
+                        .build();
+        com.talentacquisition.applicationservice.client.ProfileResponseDto profile =
+                com.talentacquisition.applicationservice.client.ProfileResponseDto.builder()
+                        .id(50L)
+                        .candidateId(101L)
+                        .build();
+        when(jobServiceClient.getJobById(201L)).thenReturn(job);
+        when(profileServiceClient.getProfileByCandidateId(101L)).thenReturn(profile);
         when(applicationRepository.existsByCandidateIdAndJobId(101L, 201L)).thenReturn(true);
 
         assertThrows(DuplicateApplicationException.class, () -> {

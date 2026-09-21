@@ -24,6 +24,7 @@ public class ApplicationServiceImpl implements ApplicationService {
 
     private final ApplicationRepository applicationRepository;
     private final com.talentacquisition.applicationservice.client.JobServiceClient jobServiceClient;
+    private final com.talentacquisition.applicationservice.client.ProfileServiceClient profileServiceClient;
 
     @Override
     @Transactional
@@ -47,6 +48,29 @@ public class ApplicationServiceImpl implements ApplicationService {
             } catch (feign.FeignException e) {
                 log.error("Error communicating with Job Service", e);
                 throw new com.talentacquisition.applicationservice.exception.ServiceCommunicationException("Job Service communication error: " + e.getMessage());
+            }
+        }
+
+        // Verify Candidate profile exists and belongs to authenticated candidate via Profile Service
+        if (profileServiceClient != null) {
+            try {
+                com.talentacquisition.applicationservice.client.ProfileResponseDto profile =
+                        profileServiceClient.getProfileByCandidateId(candidateId);
+                if (profile == null) {
+                    throw new com.talentacquisition.applicationservice.exception.ProfileNotFoundException(
+                            "Candidate profile not found for candidateId: " + candidateId);
+                }
+                if (profile.getCandidateId() != null && !profile.getCandidateId().equals(candidateId)) {
+                    throw new com.talentacquisition.applicationservice.exception.ForbiddenException(
+                            "Candidate profile does not belong to the authenticated candidate");
+                }
+            } catch (feign.FeignException.NotFound e) {
+                throw new com.talentacquisition.applicationservice.exception.ProfileNotFoundException(
+                        "Candidate profile not found for candidateId: " + candidateId);
+            } catch (feign.FeignException e) {
+                log.error("Error communicating with Profile Service", e);
+                throw new com.talentacquisition.applicationservice.exception.ServiceCommunicationException(
+                        "Profile Service communication error: " + e.getMessage());
             }
         }
 
