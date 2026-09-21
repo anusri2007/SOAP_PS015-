@@ -30,6 +30,9 @@ class ApplicationServiceTest {
     @Mock
     private ApplicationRepository applicationRepository;
 
+    @Mock
+    private com.talentacquisition.applicationservice.client.JobServiceClient jobServiceClient;
+
     @InjectMocks
     private ApplicationServiceImpl applicationService;
 
@@ -56,6 +59,14 @@ class ApplicationServiceTest {
 
     @Test
     void testCreateApplication_Success() {
+        com.talentacquisition.applicationservice.client.JobResponseDto job =
+                com.talentacquisition.applicationservice.client.JobResponseDto.builder()
+                        .id(201L)
+                        .title("Software Engineer")
+                        .status("OPEN")
+                        .build();
+
+        when(jobServiceClient.getJobById(201L)).thenReturn(job);
         when(applicationRepository.existsByCandidateIdAndJobId(101L, 201L)).thenReturn(false);
         when(applicationRepository.save(any(Application.class))).thenReturn(sampleApp);
 
@@ -65,12 +76,49 @@ class ApplicationServiceTest {
         assertThat(response.getId()).isEqualTo(1L);
         assertThat(response.getCandidateId()).isEqualTo(101L);
         assertThat(response.getJobId()).isEqualTo(201L);
+        assertThat(response.getJobTitle()).isEqualTo("Software Engineer");
         assertThat(response.getStatus()).isEqualTo(ApplicationStatus.APPLIED);
         verify(applicationRepository).save(any(Application.class));
     }
 
     @Test
+    void testCreateApplication_JobNotFound() {
+        when(jobServiceClient.getJobById(201L)).thenReturn(null);
+
+        assertThrows(com.talentacquisition.applicationservice.exception.JobNotFoundException.class, () -> {
+            applicationService.createApplication(101L, sampleRequest);
+        });
+
+        verify(applicationRepository, never()).save(any(Application.class));
+    }
+
+    @Test
+    void testCreateApplication_JobClosed() {
+        com.talentacquisition.applicationservice.client.JobResponseDto job =
+                com.talentacquisition.applicationservice.client.JobResponseDto.builder()
+                        .id(201L)
+                        .title("Software Engineer")
+                        .status("CLOSED")
+                        .build();
+
+        when(jobServiceClient.getJobById(201L)).thenReturn(job);
+
+        assertThrows(com.talentacquisition.applicationservice.exception.JobUnavailableException.class, () -> {
+            applicationService.createApplication(101L, sampleRequest);
+        });
+
+        verify(applicationRepository, never()).save(any(Application.class));
+    }
+
+    @Test
     void testCreateApplication_DuplicateThrowsException() {
+        com.talentacquisition.applicationservice.client.JobResponseDto job =
+                com.talentacquisition.applicationservice.client.JobResponseDto.builder()
+                        .id(201L)
+                        .title("Software Engineer")
+                        .status("OPEN")
+                        .build();
+        when(jobServiceClient.getJobById(201L)).thenReturn(job);
         when(applicationRepository.existsByCandidateIdAndJobId(101L, 201L)).thenReturn(true);
 
         assertThrows(DuplicateApplicationException.class, () -> {

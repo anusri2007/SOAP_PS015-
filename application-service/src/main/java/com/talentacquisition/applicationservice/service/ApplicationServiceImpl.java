@@ -23,11 +23,32 @@ import java.util.stream.Collectors;
 public class ApplicationServiceImpl implements ApplicationService {
 
     private final ApplicationRepository applicationRepository;
+    private final com.talentacquisition.applicationservice.client.JobServiceClient jobServiceClient;
 
     @Override
     @Transactional
     public ApplicationResponse createApplication(Long candidateId, ApplyJobRequest request) {
         log.info("Creating application for candidateId={} and jobId={}", candidateId, request.getJobId());
+
+        // Verify Job exists and is open via Job Service
+        com.talentacquisition.applicationservice.client.JobResponseDto job = null;
+        if (jobServiceClient != null) {
+            try {
+                job = jobServiceClient.getJobById(request.getJobId());
+                if (job == null) {
+                    throw new com.talentacquisition.applicationservice.exception.JobNotFoundException("Job not found with id: " + request.getJobId());
+                }
+                if (job.getStatus() != null &&
+                    (job.getStatus().equalsIgnoreCase("CLOSED") || job.getStatus().equalsIgnoreCase("INACTIVE"))) {
+                    throw new com.talentacquisition.applicationservice.exception.JobUnavailableException("Job is no longer open for applications: " + request.getJobId());
+                }
+            } catch (feign.FeignException.NotFound e) {
+                throw new com.talentacquisition.applicationservice.exception.JobNotFoundException("Job not found with id: " + request.getJobId());
+            } catch (feign.FeignException e) {
+                log.error("Error communicating with Job Service", e);
+                throw new com.talentacquisition.applicationservice.exception.ServiceCommunicationException("Job Service communication error: " + e.getMessage());
+            }
+        }
 
         if (applicationRepository.existsByCandidateIdAndJobId(candidateId, request.getJobId())) {
             throw new DuplicateApplicationException("Candidate " + candidateId + " has already applied for job " + request.getJobId());
@@ -42,7 +63,11 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         Application saved = applicationRepository.save(application);
         log.info("Application created successfully with id={}", saved.getId());
-        return mapToResponse(saved);
+        ApplicationResponse response = mapToResponse(saved);
+        if (job != null && job.getTitle() != null) {
+            response.setJobTitle(job.getTitle());
+        }
+        return response;
     }
 
     @Override
