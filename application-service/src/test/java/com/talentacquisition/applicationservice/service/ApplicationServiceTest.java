@@ -385,6 +385,24 @@ class ApplicationServiceTest {
     }
 
     @Test
+    void testRejectCandidate_AuthorizedHR() {
+        when(applicationRepository.findById(1L)).thenReturn(Optional.of(sampleApp));
+        when(applicationRepository.save(any(Application.class))).thenReturn(sampleApp);
+
+        ApplicationResponse response = applicationService.rejectCandidate(1L, 501L, List.of("ROLE_HR"));
+
+        assertThat(response).isNotNull();
+        assertThat(sampleApp.getStatus()).isEqualTo(ApplicationStatus.REJECTED);
+    }
+
+    @Test
+    void testRejectCandidate_CandidateForbidden() {
+        assertThrows(com.talentacquisition.applicationservice.exception.ForbiddenException.class, () -> {
+            applicationService.rejectCandidate(1L, 101L, List.of("ROLE_CANDIDATE"));
+        });
+    }
+
+    @Test
     void testSelectCandidate() {
         when(applicationRepository.findById(1L)).thenReturn(Optional.of(sampleApp));
         when(applicationRepository.save(any(Application.class))).thenReturn(sampleApp);

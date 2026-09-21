@@ -211,5 +211,26 @@ class ApplicationControllerTest {
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.status").value("SHORTLISTED"));
     }
+
+    @Test
+    void testRejectCandidate() throws Exception {
+        ApplicationResponse mockResponse = ApplicationResponse.builder()
+                .id(1L)
+                .candidateId(101L)
+                .jobId(501L)
+                .applicationDate(LocalDateTime.now())
+                .status(ApplicationStatus.REJECTED)
+                .build();
+
+        when(applicationService.rejectCandidate(eq(1L), any(), any()))
+                .thenReturn(mockResponse);
+
+        mockMvc.perform(post("/api/applications/1/reject")
+                        .header("X-User-Id", 501L)
+                        .header("X-User-Roles", "ROLE_HR"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1L))
+                .andExpect(jsonPath("$.status").value("REJECTED"));
+    }
 }
 

@@ -225,6 +225,12 @@ public class ApplicationServiceImpl implements ApplicationService {
 
     @Override
     @Transactional
+    public ApplicationResponse rejectCandidate(Long id, Long callerId, List<String> roles) {
+        return updateApplicationStatus(id, ApplicationStatus.REJECTED, callerId, roles);
+    }
+
+    @Override
+    @Transactional
     public ApplicationResponse selectCandidate(Long id) {
         return updateApplicationStatus(id, ApplicationStatus.SELECTED);
     }
