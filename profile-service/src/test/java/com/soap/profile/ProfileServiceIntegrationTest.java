@@ -347,5 +347,28 @@ class ProfileServiceIntegrationTest {
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.error").value("Conflict"));
     }
+
+    @Test
+    @DisplayName("13. Get Profile by Candidate ID for Feign inter-service call")
+    void testGetProfileByCandidateId() throws Exception {
+        Profile profile = profileRepository.save(Profile.builder()
+                .userId(113L)
+                .email("feign@example.com")
+                .name("Feign Candidate")
+                .profileType(ProfileType.CANDIDATE)
+                .location("Dallas")
+                .build());
+
+        String token = createTestToken(113L, "feign@example.com", "CANDIDATE");
+
+        mockMvc.perform(get("/api/profiles/candidate/113")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(profile.getId()))
+                .andExpect(jsonPath("$.userId").value(113))
+                .andExpect(jsonPath("$.candidateId").value(113))
+                .andExpect(jsonPath("$.name").value("Feign Candidate"))
+                .andExpect(jsonPath("$.fullName").value("Feign Candidate"));
+    }
 }
 

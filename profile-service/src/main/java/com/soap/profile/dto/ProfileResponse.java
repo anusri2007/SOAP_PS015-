@@ -62,5 +62,15 @@ public class ProfileResponse {
                 .updatedAt(profile.getUpdatedAt())
                 .build();
     }
+
+    @com.fasterxml.jackson.annotation.JsonProperty("candidateId")
+    public Long getCandidateId() {
+        return userId;
+    }
+
+    @com.fasterxml.jackson.annotation.JsonProperty("fullName")
+    public String getFullName() {
+        return name;
+    }
 }
 

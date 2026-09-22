@@ -45,6 +45,14 @@ public class ProfileController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/candidate/{candidateId}")
+    public ResponseEntity<ProfileResponse> getProfileByCandidateId(
+            @PathVariable Long candidateId
+    ) {
+        ProfileResponse response = profileService.getProfileByCandidateId(candidateId);
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ProfileResponse> getProfileById(
             @PathVariable Long id,

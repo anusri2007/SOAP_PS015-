@@ -63,6 +63,13 @@ public class ProfileService {
     }
 
     @Transactional(readOnly = true)
+    public ProfileResponse getProfileByCandidateId(Long candidateId) {
+        Profile profile = profileRepository.findByUserId(candidateId)
+                .orElseThrow(() -> new ResourceNotFoundException("Profile not found for candidate ID: " + candidateId));
+        return ProfileResponse.fromEntity(profile);
+    }
+
+    @Transactional(readOnly = true)
     public ProfileResponse getProfileById(Long id, UserPrincipal currentUser) {
         Profile profile = profileRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Profile not found with ID: " + id));
