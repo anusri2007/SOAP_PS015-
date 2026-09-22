@@ -31,7 +31,11 @@ Thumbs.db
 .project
 .settings
 .springBeans
+<<<<<<< HEAD
 .sts4-userId
+=======
+.sts4-cache
+>>>>>>> origin/applications
 
 ### IntelliJ IDEA ###
 .idea
@@ -43,6 +47,7 @@ Thumbs.db
 /nbproject/private/
 /nbbuild/
 /dist/
+<<<<<<< HEAD
 /nbproject/load-impl.xml
 /nbproject/load-impl.properties
 
@@ -56,3 +61,17 @@ Desktop.ini
 
 ### Log files ###
 *.log
+=======
+/nbproject/loadpath.properties
+
+### VS Code ###
+.vscode/
+
+### Log files ###
+*.log
+
+### OS generated ###
+Thumbs.db
+Desktop.ini
+.DS_Store
+>>>>>>> origin/applications
