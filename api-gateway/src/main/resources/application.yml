@@ -19,7 +19,7 @@ spring:
         - id: profile-service
           uri: lb://PROFILE-SERVICE
           predicates:
-            - Path=/api/profile/**
+            - Path=/api/profiles/**,/api/profile/**
 
         - id: job-service
           uri: lb://JOB-SERVICE
